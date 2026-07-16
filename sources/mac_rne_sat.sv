@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 //
-// mac_rne_sat -- GOLDEN reference implementation (validation only; never
-// shipped to the agent or the candidate).
+// mac_rne_sat -- implement your golden solution in this file per
+// docs/spec.md, and push it to your fork's mac_rne_sat_golden branch.
 //
 module mac_rne_sat (
     input  logic               clk,
