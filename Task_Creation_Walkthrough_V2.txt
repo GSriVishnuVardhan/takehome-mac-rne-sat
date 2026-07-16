@@ -33,11 +33,11 @@ Install the following if you don't already have them:
 
 **GitHub setup:**
 
-You will fork two repositories: the problem-solving repo and the framework repo. We recommend opening two terminals — one for the problem-solving repo and one for the framework.
+You will fork one repository (the problem-solving repo) and clone the framework repo. We recommend opening two terminals — one for the problem-solving repo and one for the framework.
 
 **Problem-solving repo (use Terminal 1):** Forking gives you your own copy of the repo (with all branches included) where you can push your golden RTL and the spec modifications.
 
-1. Fork the repo to your own GitHub account. Go to https://github.com/phinitylabs/takehome-mac-rne-sat and click **Fork**. Make sure the fork has **public** visibility. Remember to **uncheck** `Copy the main branch only` when creating the fork.
+1. Fork the repo to your own GitHub account. Go to https://github.com/phinitylabs/takehome-mac-rne-sat and click **Fork**. Make sure the fork has **public** visibility. Remember to **uncheck** `Copy the mac_rne_sat_baseline branch only` when creating the fork.
 2. Clone the repo you just forked:
 
 ```bash
@@ -48,7 +48,6 @@ cd takehome-mac-rne-sat
 After cloning, check out each branch so they are available locally, then confirm you can see all three task branches:
 
 ```bash
-git checkout main
 git checkout mac_rne_sat_golden
 git checkout mac_rne_sat_test
 git checkout mac_rne_sat_baseline
@@ -61,7 +60,6 @@ You should see:
 * mac_rne_sat_baseline
   mac_rne_sat_golden
   mac_rne_sat_test
-  main
 ```
 
 **Framework repo (use Terminal 2):**
@@ -81,8 +79,8 @@ Set your API keys. Your HUD API key can be created on [hud.ai](https://hud.ai): 
 This framework uses **HUD v6**. Each problem runs in its own Docker image. The container serves a v6 control channel (`hud serve` on port 8765); the agent connects over SSH to edit files in the workspace. When the agent finishes, hidden tests grade the workspace via patch + pytest.
 
 ```bash
-hud set HUD_API_KEY=<your HUD key>
-hud set ANTHROPIC_API_KEY=<your Anthropic key from liaison>
+uv run hud set HUD_API_KEY=<your HUD key>
+uv run hud set ANTHROPIC_API_KEY=<your Anthropic key from liaison>
 ```
 
 ---
@@ -94,7 +92,7 @@ The task is a signed 8×8 multiply-accumulate unit with a rounded, saturated rea
 | File                     | Purpose                                              |
 | ------------------------ | ---------------------------------------------------- |
 | `prompt.txt`             | High-level instructions telling the agent what to do |
-| `doc/spec.md`            | Detailed specification of the multiplier's behavior  |
+| `docs/spec.md`           | Detailed specification of the MAC unit's behavior    |
 | `sources/mac_rne_sat.sv` | Empty module skeleton — the agent must fill this in  |
 
 The agent does **not** see the test or the golden solution. It reads the prompt and spec, writes SystemVerilog code, and can run its own tests. After it finishes, the hidden testbench grades its implementation.
@@ -107,7 +105,7 @@ The repo has three important branches:
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | `mac_rne_sat_baseline` | The starting point: empty skeleton + full spec. **This is what the agent sees.**                                   |
 | `mac_rne_sat_test`     | Same as baseline, plus the hidden cocotb testbench (`tests/test_mac_rne_sat.py`). Used for grading.                |
-| `mac_rne_sat_golden`   | Same as baseline, but with the complete, correct implementation in `sources/mac_rne_sat.sv` (to be implemented by you). |
+| `mac_rne_sat_golden`   | Same as baseline; `sources/mac_rne_sat.sv` ships empty here — you implement your golden solution and push it to this branch. |
 
 To look at the hidden test:
 
@@ -122,7 +120,7 @@ To return to the baseline (what the agent starts with):
 git checkout mac_rne_sat_baseline
 ```
 
-Take time to read `doc/spec.md` and `sources/mac_rne_sat.sv`. Understand what the multiply-accumulate unit does.
+Take time to read `docs/spec.md` and `sources/mac_rne_sat.sv`. Understand what the multiply-accumulate unit does.
 
 ---
 
@@ -153,7 +151,7 @@ First, check out the test branch (which has the testbench):
 git switch mac_rne_sat_test
 ```
 
-Run the hidden testbench against the **baseline** code (this should fail — the module has no internal logic, so the testbench will time out waiting for a response):
+Run the hidden testbench against the **baseline** code (this should fail — the skeleton ties its outputs low, so the testbench reports res/res_valid mismatches on the first cycles):
 
 ```bash
 cd tests
@@ -201,7 +199,7 @@ Understanding *why* the agent fails is the key to this takehome. The agent is no
 
 ## Section 5: Modifying the Specification (~1–2 hr)
 
-Your goal is to modify `doc/spec.md` (and/or `prompt.txt`) so that the agent's pass rate improves to **between 50% and 80%**.
+Your goal is to modify `docs/spec.md` (and/or `prompt.txt`) so that the agent's pass rate improves to **between 50% and 80%**.
 
 The spec currently provides detailed guidance. You may modify any part of it — add detail, remove detail, restructure it, add hints, change wording — whatever you believe will help the agent produce correct implementations more often, based on your analysis in Section 4.
 
@@ -228,7 +226,7 @@ PROBLEM_REGISTRY.append(
     ProblemSpec(
         id="mac_rne_sat",
         description="""Implement the module `mac_rne_sat` in sources/mac_rne_sat.sv according to
-doc/spec.md.
+docs/spec.md.
 
 Requirements:
 - Synthesizable SystemVerilog, compatible with Icarus Verilog (-g2012).
@@ -236,7 +234,7 @@ Requirements:
 - Keep the module name, port names, directions, and widths exactly as in
   the provided skeleton.
 - You may write and run your own tests, but grading is performed by a
-  hidden testbench that checks cycle-exact behavior against doc/spec.md.
+  hidden testbench that checks cycle-exact behavior against docs/spec.md.
 
 Deliverable: the completed sources/mac_rne_sat.sv. Do not modify any other
 file.
@@ -273,8 +271,8 @@ Since your fork is public, Docker can clone it without any authentication token.
 ```bash
 cd /path/to/takehome-mac-rne-sat
 git checkout mac_rne_sat_baseline
-# (make your spec edits to doc/spec.md)
-git add doc/spec.md
+# (make your spec edits to docs/spec.md)
+git add docs/spec.md
 git commit -m "modify spec"
 git push origin mac_rne_sat_baseline
 
