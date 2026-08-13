@@ -16,64 +16,49 @@ module mac_rne_sat (
     output logic               ovf        // sticky saturation flag
 );
 
-    logic signed [15:0] p, acc_next, snapshot, q, r, rounded;
+    logic signed [15:0] p,  res_int;
+    logic unsigned [7:0] r;
+    logic signed [27:0] acc_next, snapshot, q, rounded;
     // Product
-    always_comb p = (a * b) >>> 8;
+    assign p = (a * b);
     // Accumulator
-    always_ff @(posedge clk) begin
-        if (rst) acc_next <= 16'h0;
+    always @(posedge clk) begin
+        if (rst) acc_next <= 28'd0;
         else begin
             case ({clr, en})
                 2'b00: acc_next <= acc_next;
-                2'b01: acc_next <= acc_next + p;
-                2'b10: acc_next <= 16'h0;
-                2'b11: acc_next <= p;
+                2'b01: acc_next <= acc_next + {{12{p[15]}},p};
+                2'b10: acc_next <= 28'd0;
+                2'b11: acc_next <= {{12{p[15]}},p};
             endcase
         end
     end
     
-    always_ff @(posedge clk) begin
-        if (rst) snapshot <= 16'h0;
-        else if (rd) snapshot <= acc_next;
-    end
+    assign snapshot = rd ? acc_next : 28'd0;
+    assign q = $floor(snapshot / 256.0);
+    assign r = snapshot - (q * 256.0);
+    
+    // Rounding
+    assign rounded = (r < 128) ? q : (r > 128) ? q + 1 : (q[0]) ? q + 1 : q;
 
-    always_comb begin
-        q = $floor(snapshot / 256);
-        r = snapshot - (q * 256);
-    end
+    // Saturation
+    assign res_int = (rounded > 32767) ? 32767 : (rounded < -32768) ? -32768 : rounded[15:0];
 
-    always_comb begin
-        if (r < 128) rounded = q ;
-        else if (r > 128) rounded = q + 1;
-        else begin 
-            if (q[0]) rounded = q + 1;
-            else rounded = q;
-        end
-    end
-
-    always_comb begin
-        if (rounded > 32767) res_int = 32767;
-        else if (rounded < -32768) res_int = -32768;
-        else res_int = rounded;
-    end
-
-    always_ff @(posedge clk) begin
+    // Readout
+    always @(posedge clk) begin
         if (rst) begin 
-            rd_q <= 1'b0;
             res_valid <= 1'b0; 
             res <= 16'h0; 
             end
         else begin 
-            rd_q <= rd;
-            res_valid <= rd_q; 
-
-            res <= rd_q ? res_int : res; 
+            res_valid <= rd; 
+            res <= rd ? res_int : res; 
             end
     end
 
-    always_ff @(posedge clk) begin
+    always @(posedge clk) begin
         if (rst) ovf <= 1'b0;
-        else if (rd_q && (rounded > 32767 || rounded < -32768)) ovf <= 1'b1;
+        else if (rd && (rounded > 32767 || rounded < -32768)) ovf <= 1'b1;
         else if (!rd && clr ) ovf <= 1'b0;
         else ovf <= ovf;
     end
