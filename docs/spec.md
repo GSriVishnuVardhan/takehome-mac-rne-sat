@@ -54,10 +54,10 @@ the end of cycle *t−1* — that is, **before** any accumulator update
 (`en`/`clr`) occurring in cycle *t*. An `en` asserted in the same cycle as
 `rd` still updates the accumulator normally; it is simply not part of that
 snapshot. A `clr` asserted in the same cycle as `rd` clears the accumulator
-**after** the snapshot is taken (the readout returns the pre-clear value).
+**after** the snapshot is taken (the readout returns the pre-clear value). Here snapshot can take the `rd` gated value of accumulator flip-flop as it is already been updated at rising edge of `clk`. Thus we don't need another flip-flop for snapshot and thus can avoid adding it to the latency of result.
 
 **Rounding — round-half-to-even at the 8 LSBs.** Let
-`q = floor(snapshot / 256)` and `r = snapshot − 256·q`, so that
+`q = floor(snapshot / 256.0) or q = snapshot >>> 8` and `r = snapshot − 256·q`, so that
 `0 ≤ r ≤ 255` — including for negative snapshots. The rounded value is:
 
 - `q` if `r < 128`;
@@ -71,7 +71,8 @@ saturation applies to the **rounded** value.
 
 **Registration and hold.** `res` and `res_valid` are registered outputs. In
 cycle *t+1*, `res_valid` is 1 and `res` carries the rounded, saturated
-snapshot. `res_valid` is exactly one cycle wide per `rd`. Between readouts,
+snapshot. `res_valid` and `res` should give the valid output values in the next cycle just after the cycle `rd` assertion is registered by `clk`.
+`res_valid` is exactly one cycle wide per `rd`. Between readouts,
 `res` **holds** its last value; it does not clear when `res_valid` is low.
 Back-to-back `rd` cycles are permitted and each takes its own snapshot.
 
