@@ -51,13 +51,10 @@ Asserting `rd` in cycle *t* requests a snapshot readout.
 
 **Snapshot value.** The snapshot is the accumulator value as it stood at
 the end of cycle *t−1* — that is, **before** any accumulator update
-(`en`/`clr`) occurring in cycle *t*. An `en` asserted in the same cycle as
-`rd` still updates the accumulator normally; it is simply not part of that
-snapshot. A `clr` asserted in the same cycle as `rd` clears the accumulator
-**after** the snapshot is taken (the readout returns the pre-clear value). Here snapshot can take the `rd` gated value of accumulator flip-flop as it is already been updated at rising edge of `clk`. Thus we don't need another flip-flop for snapshot and thus can avoid adding it to the latency of result.
+(`en`/`clr`) occurring in cycle *t*. it can be thought of as the present value of accumulator, basically both are equal.
 
 **Rounding — round-half-to-even at the 8 LSBs.** Let
-`q = floor(snapshot / 256.0) or q = snapshot >>> 8` and `r = snapshot − 256·q`, so that
+`q = snapshot >>> 8` and `r = snapshot[7:0]`, so that
 `0 ≤ r ≤ 255` — including for negative snapshots. The rounded value is:
 
 - `q` if `r < 128`;
@@ -110,3 +107,10 @@ to 0.
 - No SystemVerilog Assertions (SVA).
 - Do not change the module name, port names, directions, or widths.
 - Single clock domain. No latches.
+
+## 8. Hints
+
+- `Snapshot` is not an clocked Register.
+- `res` takes calculated value based on `rd` at `clk` edge, not the delayed version of `rd`.
+- But the `res_valid` is the floped version of `rd`.
+- Use simple case statement for `acc` calculation.
