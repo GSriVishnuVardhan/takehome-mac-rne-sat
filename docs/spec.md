@@ -47,14 +47,8 @@ not be handled.
 
 ## 4. Readout path
 
-Asserting `rd` in cycle *t* requests a snapshot readout.
-
-**Snapshot value.** The snapshot is the accumulator value as it stood at
-the end of cycle *t−1* — that is, **before** any accumulator update
-(`en`/`clr`) occurring in cycle *t*. it can be thought of as the present value of accumulator, basically both are equal.
-
 **Rounding — round-half-to-even at the 8 LSBs.** Let
-`q = snapshot >>> 8` and `r = snapshot[7:0]`, so that
+`q = acc >>> 8` and `r = acc[7:0]`, so that
 `0 ≤ r ≤ 255` — including for negative snapshots. The rounded value is:
 
 - `q` if `r < 128`;
