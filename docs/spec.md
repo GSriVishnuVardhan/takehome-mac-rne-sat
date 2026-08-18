@@ -108,9 +108,3 @@ to 0.
 - Do not change the module name, port names, directions, or widths.
 - Single clock domain. No latches.
 
-## 8. Hints
-
-- `Snapshot` is not an clocked Register.
-- `res` takes calculated value based on `rd` at `clk` edge, not the delayed version of `rd`.
-- But the `res_valid` is the floped version of `rd`.
-- Use simple case statement for `acc` calculation.
