@@ -18,7 +18,8 @@ module mac_rne_sat (
 
     logic signed [15:0] p,  res_int;
     logic unsigned [7:0] r;
-    logic signed [27:0] acc_next, snapshot, q, rounded;
+    logic signed [27:0] acc_next, rounded;
+    logic signed [19:0] q;
     // Product
     assign p = (a * b);
     // Accumulator
@@ -34,9 +35,8 @@ module mac_rne_sat (
         end
     end
     
-    assign snapshot = rd ? acc_next : 28'd0;
-    assign q = $floor(snapshot / 256.0);
-    assign r = snapshot - (q * 256.0);
+    assign q = acc_next >>> 8 ;
+    assign r = acc_next[7:0];
     
     // Rounding
     assign rounded = (r < 128) ? q : (r > 128) ? q + 1 : (q[0]) ? q + 1 : q;
